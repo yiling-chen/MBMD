@@ -5,6 +5,12 @@ import time
 import tensorflow as tf
 import numpy as np
 from google.protobuf import text_format
+import sys
+
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
+sys.path.append('/mnt/Data-1/Projects/trackers/MBMD/lib')
+sys.path.append('/mnt/Data-1/Projects/trackers/MBMD/lib/slim')
+
 from object_detection.protos import pipeline_pb2
 from core.model_builder import build_man_model
 from object_detection.core import box_list
@@ -13,14 +19,11 @@ from PIL import Image
 Image.MAX_IMAGE_PIXELS = 1000000000
 import scipy.io as sio
 import vot
-import sys
 import random
 from vggm import vggM
 from sample_generator import *
 from tracking_utils import *
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
-sys.path.append('/home/xiaobai/Desktop/MBMD_vot_code/lib')
-sys.path.append('/home/xiaobai/Desktop/MBMD_vot_code/lib/slim')
+
 
 def _compile_results(gt, bboxes, dist_threshold):
     l = np.size(bboxes, 0)
@@ -284,6 +287,7 @@ def build_extract_feature_graph1(model, model_scope,reuse=None):
         init_feature_maps = model.extract_init_feature(preprocessed_init_images)
 
     return image, init_image, output_dict, init_feature_maps
+
 # def build_train_boxpredictor_graph(model, model_scope,reuse=None):
 #     batch_size = 20
 #     seq_len = 1
@@ -339,8 +343,8 @@ def build_train_graph(model,model_scope, lr=1e-5, reuse=None):
 class MobileTracker(object):
     def __init__(self, image, region):
         init_training = True
-        config_file = '/home/xiaobai/Desktop/MBMD_vot_code/model/ssd_mobilenet_tracking.config'
-        checkpoint_dir = '/home/xiaobai/Desktop/MBMD_vot_code/model/dump'
+        config_file = '/mnt/Data-1/Projects/trackers/MBMD/model/ssd_mobilenet_tracking.config'
+        checkpoint_dir = '/mnt/Data-1/Projects/trackers/MBMD/model/dump'
 
         model_config, train_config, input_config, eval_config = get_configs_from_pipeline_file(config_file)
         model = build_man_model(model_config=model_config, is_training=False)
@@ -455,7 +459,7 @@ class MobileTracker(object):
         neg_regions = extract_regions(im, neg_examples)
         neg_regions = neg_regions[:, :, :, ::-1]
 
-        vggMSaver.restore(self.sess, '/home/xiaobai/Desktop/MBMD_vot_code/ckpt/VGGM/vggMParams.ckpt')
+        vggMSaver.restore(self.sess, '/mnt/Data-1/Projects/trackers/MBMD/ckpt/VGGM/vggMParams.ckpt')
 
         neg_features = np.zeros((5000, 3, 3, 512))
         pos_features = np.zeros((500, 3, 3, 512))
@@ -1160,7 +1164,7 @@ class MobileTracker(object):
         width = self.last_gt[3] - self.last_gt[1]
         height = self.last_gt[2] - self.last_gt[0]
 
-        show_res(image, np.array(self.last_gt, dtype=np.int32), '2', score=scores[0,max_idx],score_max=score_max)
+        # show_res(image, np.array(self.last_gt, dtype=np.int32), '2', score=scores[0,max_idx],score_max=score_max)
         if scores[0,max_idx] > 0.5 and score_max > 0:
             confidence_score = 0.99
         elif scores[0,max_idx] < 0.3 and score_max < 0:
